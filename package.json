@@ -4,9 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "electron index.js",
-    "build": "electron-packager . --all",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron index.js"
+  },
+  "build": {
+    "mac": {
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    }
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +21,7 @@
     "electron-winstaller": "^5.1.0"
   },
   "dependencies": {
-    "auto-launch": "^5.0.6"
+    "auto-launch": "^5.0.6",
+    "path": "^0.12.7"
   }
 }
