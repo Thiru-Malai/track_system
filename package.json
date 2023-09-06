@@ -1,0 +1,21 @@
+{
+  "name": "track_system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron index.js",
+    "build": "electron-packager . --all",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^26.1.0",
+    "electron-packager": "^17.1.2",
+    "electron-winstaller": "^5.1.0"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6"
+  }
+}
