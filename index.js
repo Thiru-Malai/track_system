@@ -9,12 +9,40 @@ var startTime = new Date().toISOString();
 var app = electron.app;
 var BrowserWindow = electron.BrowserWindow;
 let tray = null;
+var data;
+
+var endTime = 0;
+
+//Firebase Settings
+const serviceAccount = require("./track_System_firebase_adminsdk.json"); // Replace with your Firebase credentials file
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://employeemonitoring-eca95-default-rtdb.firebaseio.com/", // Replace with your Firebase Realtime Database URL
+});
+const db = admin.database();
+const ref = db.ref("/times"); // Replace with your database path
+
 app.setLoginItemSettings({
   openAtLogin: true,
 });
 
 function setEntryTime() {
   startTime = new Date().toISOString();
+  data = {
+    [systemName]: {
+      start_time: startTime,
+      end_time: endTime,
+    },
+  };
+  console.log(systemName + "\n" + startTime + "\n" + endTime);
+  ref.update(data, (error) => {
+    if (error) {
+      console.error("Error writing to Firebase:", error);
+    } else {
+      console.log("Data saved successfully.");
+    }
+  });
 }
 function createTray() {
   const icon = path.join("track_system.png"); // required.
@@ -30,7 +58,7 @@ function createTray() {
     {
       label: "Quit",
       click: () => {
-        app.quit(); // actually quit the app.
+        app.quit();
       },
     },
   ]);
@@ -87,25 +115,15 @@ app.on("before-quit", () => {
 });
 
 app.on("window-all-closed", () => {
-  const serviceAccount = require("./track_System_firebase_adminsdk.json"); // Replace with your Firebase credentials file
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL:
-      "https://employeemonitoring-eca95-default-rtdb.firebaseio.com/", // Replace with your Firebase Realtime Database URL
-  });
-
-  const db = admin.database();
   // console.log(systemName + "\n" + startTime + "\n");
-  const endTime = new Date().toISOString();
-  const data = {
+  endTime = new Date().toISOString();
+  data = {
     [systemName]: {
       start_time: startTime,
       end_time: endTime,
     },
   };
   console.log(systemName + "\n" + startTime + "\n" + endTime);
-  const ref = db.ref("/times"); // Replace with your database path
   ref.update(data, (error) => {
     if (error) {
       console.error("Error writing to Firebase:", error);
