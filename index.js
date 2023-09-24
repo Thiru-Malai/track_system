@@ -1,9 +1,10 @@
+// electron-packager . track_system --platform=win32 --arch=x64
+
 var electron = require("electron");
 const AutoLaunch = require("auto-launch");
 const { Menu, nativeImage, Tray } = require("electron");
 const os = require("os");
 const admin = require("firebase-admin");
-var path = require("path");
 const systemName = os.hostname();
 var startTime = new Date().toISOString();
 var app = electron.app;
@@ -23,19 +24,37 @@ admin.initializeApp({
 const db = admin.database();
 const ref = db.ref("/times"); // Replace with your database path
 
-app.setLoginItemSettings({
-  openAtLogin: true,
-});
+// app.setLoginItemSettings({
+//   openAtLogin: true,
+// });
+
+function getCurrentDate() {
+  let date = new Date().toLocaleDateString("en-IN");
+  return date
+}
+
+function getCurrentTime() {
+  const date = new Date();
+  var ISToffSet = 330; //IST is 5:30; i.e. 60*5+30 = 330 in minutes 
+  offset = ISToffSet * 60 * 1000;
+  var ISTTime = new Date(date.getTime() + offset);
+  return (ISTTime).toJSON().substring(11, 19)
+}
 
 function setEntryTime() {
-  startTime = new Date().toISOString();
   data = {
     [systemName]: {
-      start_time: startTime,
+      start_time: {
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+      },
       end_time: endTime,
+      status: 1,
     },
   };
-  console.log(systemName + "\n" + startTime + "\n" + endTime);
+  startTime = data[systemName].start_time
+  console.log(startTime)
+
   ref.update(data, (error) => {
     if (error) {
       console.error("Error writing to Firebase:", error);
@@ -44,8 +63,54 @@ function setEntryTime() {
     }
   });
 }
+
+function setEndTime() {
+  data = {
+    [systemName]: {
+      start_time: startTime,
+      end_time: {
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+      },
+      status: 0,
+    },
+  };
+  endTime = data[systemName].end_time
+  console.log(endTime)
+
+  ref.update(data, (error) => {
+    if (error) {
+      console.error("Error writing to Firebase:", error);
+    } else {
+      console.log("Data saved successfully.");
+    }
+  })
+}
+
+function setCurrentTime() {
+  data = {
+    [systemName]: {
+      start_time: startTime,
+      end_time: endTime,
+      status: 1,
+      current_time: getCurrentTime(),
+    },
+  };
+  ref.update(data, (error) => {
+    if (error) {
+      console.error("Error writing to Firebase:", error);
+    } else {
+      console.log("Data saved successfully.");
+    }
+  })
+}
+
+setInterval(setCurrentTime, 5000);
+
+setEntryTime();
+
 function createTray() {
-  const icon = path.join("track_system.png"); // required.
+  const icon = "D:\\Projects\\track_system\\track_system-win32-x64\\resources\\app\\track_system.png"; // required.
   const trayicon = nativeImage.createFromPath(icon);
   tray = new Tray(trayicon.resize({ width: 106 }));
   const contextMenu = Menu.buildFromTemplate([
@@ -55,82 +120,50 @@ function createTray() {
         createWindow();
       },
     },
-    {
-      label: "Quit",
-      click: () => {
-        app.quit();
-      },
-    },
   ]);
-
   tray.setContextMenu(contextMenu);
 }
-
-let mainWindow;
 
 function createWindow() {
   if (!tray) {
     createTray();
   }
 
-  setEntryTime();
-
   var mainwindow = new BrowserWindow({
     width: 1200,
     height: 800,
     icon: "favicon.ico",
     frame: true,
-    title: "Menuboard",
+    title: "Dashboard",
     fullscreen: false,
     autoHideMenuBar: false,
-    skipTaskbar: true,
+    skipTaskbar: false,
   });
-  mainwindow.openDevTools();
-  mainwindow.loadURL("https://www.google.com");
+
+  mainwindow.loadFile("index.html");
   mainwindow.on("closed", function () {
     mainwindow = null;
   });
 }
 
-app.on("ready", createWindow);
-
-app.on("before-quit", () => {
-  const endTime = new Date().toISOString();
-  const data = {
-    [systemName]: {
-      start_time: startTime,
-      end_time: endTime,
-    },
-  };
-  console.log(systemName + "\n" + startTime + "\n" + endTime);
-  const ref = db.ref("/times"); // Replace with your database path
-  ref.update(data, (error) => {
-    if (error) {
-      console.error("Error writing to Firebase:", error);
-    } else {
-      console.log("Data saved successfully.");
-    }
-    app.quit();
+app.on("ready", () => {
+  createWindow()
+  let autoLaunch = new AutoLaunch({
+    name: 'Track System',
+    path: app.getPath('exe'),
+  });
+  autoLaunch.isEnabled().then((isEnabled) => {
+    if (!isEnabled) autoLaunch.enable();
   });
 });
 
+app.on("before-quit", () => {
+  setEndTime()
+});
+
 app.on("window-all-closed", () => {
-  // console.log(systemName + "\n" + startTime + "\n");
-  endTime = new Date().toISOString();
-  data = {
-    [systemName]: {
-      start_time: startTime,
-      end_time: endTime,
-    },
-  };
-  console.log(systemName + "\n" + startTime + "\n" + endTime);
-  ref.update(data, (error) => {
-    if (error) {
-      console.error("Error writing to Firebase:", error);
-    } else {
-      console.log("Data saved successfully.");
-    }
-    app.dock.hide();
-    if (process.platform != "darwin") app.quit();
-  });
+});
+
+process.on('exit', function () {
+  setEndTime();
 });
