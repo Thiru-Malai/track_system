@@ -22,7 +22,7 @@ admin.initializeApp({
   databaseURL: "https://employeemonitoring-eca95-default-rtdb.firebaseio.com/", // Replace with your Firebase Realtime Database URL
 });
 const db = admin.database();
-const ref = db.ref("/times"); // Replace with your database path
+const ref = db.ref("/times/group1"); // Replace with your database path
 
 // app.setLoginItemSettings({
 //   openAtLogin: true,
@@ -140,7 +140,7 @@ function createWindow() {
     skipTaskbar: false,
   });
 
-  mainwindow.loadFile("index.html");
+  mainwindow.loadURL("https://smart-lab-landing-page.20it112-thiruma.repl.co");
   mainwindow.on("closed", function () {
     mainwindow = null;
   });
