@@ -7,8 +7,10 @@ const os = require("os");
 const admin = require("firebase-admin");
 const systemName = os.hostname();
 var startTime = new Date().toISOString();
+const shutdown = require('electron-shutdown-command');
 var app = electron.app;
 var BrowserWindow = electron.BrowserWindow;
+const powerMonitor = electron.powerMonitor; 
 let tray = null;
 var data;
 
@@ -23,6 +25,28 @@ admin.initializeApp({
 });
 const db = admin.database();
 const ref = db.ref("/times/group1"); // Replace with your database path
+
+
+  var dataRefShutdown = db.ref('times/shutdown');
+
+dataRefShutdown.on('value', function (snapshot) {
+  const data = snapshot.val()
+  setEndTime()
+  if (data == 1) {
+    let shutdownData = {
+      shutdown: 0
+    }
+    ref.update(shutdownData, (error) => {
+      if (error) {
+        console.error("Error writing to Firebase:", error);
+      } else {
+        console.log("Shutdown set to 0");
+      }
+    });
+    shutdown.shutdown();
+  }
+})
+
 
 // app.setLoginItemSettings({
 //   openAtLogin: true,
@@ -50,6 +74,7 @@ function setEntryTime() {
       },
       end_time: endTime,
       status: 1,
+      shutdown: 0,
     },
   };
   startTime = data[systemName].start_time
@@ -73,6 +98,7 @@ function setEndTime() {
         time: getCurrentTime(),
       },
       status: 0,
+      shutdown: 0,
     },
   };
   endTime = data[systemName].end_time
@@ -110,7 +136,7 @@ setInterval(setCurrentTime, 5000);
 setEntryTime();
 
 function createTray() {
-  const icon = "D:\\Projects\\track_system\\track_system-win32-x64\\resources\\app\\track_system.png"; // required.
+  const icon = "resources\\app\\TCE-LOGO.ico"; // required.
   const trayicon = nativeImage.createFromPath(icon);
   tray = new Tray(trayicon.resize({ width: 106 }));
   const contextMenu = Menu.buildFromTemplate([
@@ -132,7 +158,7 @@ function createWindow() {
   var mainwindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: "favicon.ico",
+    icon: "resources\\app\\TCE-LOGO.ico",
     frame: true,
     title: "Dashboard",
     fullscreen: false,
@@ -167,3 +193,12 @@ app.on("window-all-closed", () => {
 process.on('exit', function () {
   setEndTime();
 });
+
+
+powerMonitor.on('shutdown', () => { 
+  console.log('The system is Shutting Down'); 
+  setTimeout(()=>{
+    setEndTime()
+  }, 2000)
+  app.quit()
+}); 

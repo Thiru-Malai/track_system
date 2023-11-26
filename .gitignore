@@ -2,3 +2,4 @@ node_modules
 track_system-linux-x64
 track_system-win32-x64
 package-lock.json
+out/

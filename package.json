@@ -1,10 +1,12 @@
 {
   "name": "track_system",
   "version": "1.0.0",
-  "description": "",
+  "description": "This app monitors the status of the system",
   "main": "index.js",
   "scripts": {
-    "start": "electron index.js"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "build": {
     "mac": {
@@ -13,16 +15,23 @@
       }
     }
   },
-  "author": "",
+  "author": "Thirumalai K G",
   "license": "ISC",
   "devDependencies": {
+    "@electron-forge/cli": "^7.1.0",
+    "@electron-forge/maker-deb": "^7.1.0",
+    "@electron-forge/maker-rpm": "^7.1.0",
+    "@electron-forge/maker-squirrel": "^7.1.0",
+    "@electron-forge/maker-zip": "^7.1.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
     "electron": "^26.1.0",
-    "electron-packager": "^17.1.2",
-    "electron-winstaller": "^5.1.0"
+    "electron-packager": "^17.1.2"
   },
   "dependencies": {
-    "@paymoapp/electron-shutdown-handler": "^1.0.14",
+    "@paymoapp/electron-shutdown-handler": "^1.0.15",
     "auto-launch": "^5.0.6",
+    "electron-shutdown-command": "^2.0.1",
+    "electron-squirrel-startup": "^1.0.0",
     "firebase": "^10.3.1",
     "firebase-admin": "^11.10.1",
     "os": "^0.1.2",
